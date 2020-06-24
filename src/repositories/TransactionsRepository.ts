@@ -1,5 +1,14 @@
 import Transaction from '../models/Transaction';
 
+import SumTransactionIncomeService from '../services/SumTransactionIncomeService';
+import SumTransactionOutcomeService from '../services/SumTransactionOutcomeService';
+
+interface CreateTransactionDTO {
+  title: string;
+  value: number;
+  type: 'income' | 'outcome';
+}
+
 interface Balance {
   income: number;
   outcome: number;
@@ -14,15 +23,30 @@ class TransactionsRepository {
   }
 
   public all(): Transaction[] {
-    // TODO
+    return this.transactions;
   }
 
   public getBalance(): Balance {
-    // TODO
+    const sumTransactionIncome = new SumTransactionIncomeService();
+    const sumTransactionOutcome = new SumTransactionOutcomeService();
+
+    const income = sumTransactionIncome.execute(this.transactions);
+    const outcome = sumTransactionOutcome.execute(this.transactions);
+    const balance = {
+      income,
+      outcome,
+      total: income - outcome,
+    };
+
+    return balance;
   }
 
-  public create(): Transaction {
-    // TODO
+  public create({ title, value, type }: CreateTransactionDTO): Transaction {
+    const transaction = new Transaction({ title, value, type });
+
+    this.transactions.push(transaction);
+
+    return transaction;
   }
 }
 
