@@ -1,8 +1,6 @@
 import TransactionsRepository from '../repositories/TransactionsRepository';
 import Transaction from '../models/Transaction';
 
-import VerifyOutcomePossibilityService from './VerifyOutcomePossibilityService';
-
 interface Request {
   title: string;
   value: number;
@@ -17,19 +15,21 @@ class CreateTransactionService {
   }
 
   public execute({ title, value, type }: Request): Transaction {
+    if (!['income', 'outcome'].includes(type)) {
+      throw new Error('Transaction type is invalid');
+    }
+
+    const { total } = this.transactionsRepository.getBalance();
+
+    if (type === 'outcome' && total < value) {
+      throw new Error('You do not have enought balance');
+    }
+
     const transaction = this.transactionsRepository.create({
       title,
       value,
       type,
     });
-    const balance = this.transactionsRepository.getBalance();
-
-    const verifyOutcomePossibility = new VerifyOutcomePossibilityService();
-    const isPossible = verifyOutcomePossibility.execute(balance);
-
-    if (!isPossible) {
-      throw Error('Invalid Transaction');
-    }
 
     return transaction;
   }

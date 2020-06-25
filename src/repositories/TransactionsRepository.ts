@@ -1,8 +1,5 @@
 import Transaction from '../models/Transaction';
 
-import SumTransactionIncomeService from '../services/SumTransactionIncomeService';
-import SumTransactionOutcomeService from '../services/SumTransactionOutcomeService';
-
 interface CreateTransactionDTO {
   title: string;
   value: number;
@@ -27,12 +24,19 @@ class TransactionsRepository {
   }
 
   public getBalance(): Balance {
-    const sumTransactionIncome = new SumTransactionIncomeService();
-    const sumTransactionOutcome = new SumTransactionOutcomeService();
+    const { income, outcome } = this.transactions.reduce(
+      (accumulator: Balance, transaction: Transaction) => {
+        accumulator[transaction.type] += transaction.value;
+        return accumulator;
+      },
+      {
+        income: 0,
+        outcome: 0,
+        total: 0,
+      },
+    );
 
-    const income = sumTransactionIncome.execute(this.transactions);
-    const outcome = sumTransactionOutcome.execute(this.transactions);
-    const balance = {
+    const balance: Balance = {
       income,
       outcome,
       total: income - outcome,
